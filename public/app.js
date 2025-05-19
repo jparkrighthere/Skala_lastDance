@@ -14,15 +14,15 @@ let cameraOff = false
 let roomName
 let myPeerConnection
 
-// Record Function
-const recordBtn = document.getElementById('recordBtn')
+// 녹음 관련
 let mediaRecorder
 let recordedChunks = []
 let isRecording = false
+let audioStream
 
 async function getCameras() {
     try {
-        const devices = await navigator.mediaDevices.enumerateDevices() //api call that shows all devices
+        const devices = await navigator.mediaDevices.enumerateDevices()
         const cameras = devices.filter((device) => device.kind === 'videoinput')
         const currentCamera = myStream.getVideoTracks()[0]
         cameras.forEach((camera) => {
@@ -40,7 +40,7 @@ async function getCameras() {
 }
 
 async function getMedia(deviceId) {
-    const initialConstrains = {
+    const initialConstraints = {
         audio: true,
         video: { facingMode: 'user' },
     }
@@ -49,8 +49,8 @@ async function getMedia(deviceId) {
         video: { deviceId: { exact: deviceId } },
     }
     try {
-        myStream = await navigator.mediaDevices.getUserMedia(deviceId ? cameraConstraints : initialConstrains) // api call that gets the media
-        myFace.srcObject = myStream // setting the video stream to the video element
+        myStream = await navigator.mediaDevices.getUserMedia(deviceId ? cameraConstraints : initialConstraints)
+        myFace.srcObject = myStream
         if (!deviceId) {
             await getCameras()
         }
@@ -58,10 +58,10 @@ async function getMedia(deviceId) {
         console.log(e)
     }
 }
-// 녹음 시작 함수
+
+// 자동 음성 녹음 시작
 async function startAudioRecording() {
     try {
-        // 오디오만 요청
         audioStream = await navigator.mediaDevices.getUserMedia({ audio: true })
 
         recordedChunks = []
@@ -77,33 +77,20 @@ async function startAudioRecording() {
             console.log('🛑 음성 녹음 종료')
 
             const blob = new Blob(recordedChunks, { type: 'audio/webm' })
-            const url = URL.createObjectURL(blob)
-
-            const a = document.createElement('a')
-            a.href = url
-            a.download = `recording_${Date.now()}.webm`
-            a.style.display = 'none'
-            document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
-            URL.revokeObjectURL(url)
-
-            // Send FastAPI
             const formData = new FormData()
             const filename = `recording_${Date.now()}.webm`
             formData.append('file', blob, filename)
 
             try {
-                const response = await fetch('http://localhost:8000/upload-audio', {
+                const response = await fetch('https://0681-211-45-60-5.ngrok-free.app/consult/upload', {
                     method: 'POST',
                     body: formData,
                 })
 
-                if (!response.ok) {
-                    throw new Error('업로드 실패')
-                }
+                if (!response.ok) throw new Error('업로드 실패')
+
                 const result = await response.json()
-                console.log('FastAPI 업로드 성공', result)
+                console.log('✅ FastAPI 업로드  성공', result)
             } catch (error) {
                 console.error('❌ FastAPI 업로드 오류:', error)
                 alert('FastAPI 서버로 파일 전송에 실패했습니다.')
@@ -118,51 +105,15 @@ async function startAudioRecording() {
     }
 }
 
-// 녹음 종료 함수
+// 자동 녹음 종료
 async function stopAudioRecording() {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.onstop = async () => {
-            console.log('🛑 음성 녹음 종료')
-
-            const blob = new Blob(recordedChunks, { type: 'audio/webm' })
-            const url = URL.createObjectURL(blob)
-
-            const a = document.createElement('a')
-            a.href = url
-            a.download = `recording_${Date.now()}.webm`
-            a.style.display = 'none'
-            document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
-            URL.revokeObjectURL(url) // 메모리 정리
-
-            // Send FastAPI
-            const formData = new FormData()
-            const filename = `recording_${Date.now()}.webm`
-            formData.append('file', blob, filename)
-
-            try {
-                const response = await fetch('http://localhost:8000/upload-audio', {
-                    method: 'POST',
-                    body: formData,
-                })
-
-                if (!response.ok) {
-                    throw new Error('업로드 실패')
-                }
-                const result = await response.json()
-                console.log('FastAPI 업로드 성공', result)
-            } catch (error) {
-                console.error('❌ FastAPI 업로드 오류:', error)
-                alert('FastAPI 서버로 파일 전송에 실패했습니다.')
-            }
-        }
-
-        mediaRecorder.stop() // onstop은 여기 이후에 실행됨
+        mediaRecorder.stop()
     }
 
     if (audioStream) {
         audioStream.getTracks().forEach((track) => track.stop())
+        audioStream = null
     }
 }
 
@@ -170,26 +121,16 @@ muteBtn.addEventListener('click', () => {
     myStream.getAudioTracks().forEach((track) => {
         track.enabled = !track.enabled
     })
-    if (!muted) {
-        muteBtn.innerText = 'Unmute'
-        muted = true
-    } else {
-        muteBtn.innerText = 'Mute'
-        muted = false
-    }
+    muteBtn.innerText = muted ? 'Mute' : 'Unmute'
+    muted = !muted
 })
 
 cameraBtn.addEventListener('click', () => {
     myStream.getVideoTracks().forEach((track) => {
         track.enabled = !track.enabled
     })
-    if (!cameraOff) {
-        cameraBtn.innerText = 'Turn Camera On'
-        cameraOff = true
-    } else {
-        cameraBtn.innerText = 'Turn Camera Off'
-        cameraOff = false
-    }
+    cameraBtn.innerText = cameraOff ? 'Turn Camera Off' : 'Turn Camera On'
+    cameraOff = !cameraOff
 })
 
 camerasSelect.addEventListener('input', async () => {
@@ -197,31 +138,27 @@ camerasSelect.addEventListener('input', async () => {
     if (myPeerConnection) {
         const videoTrack = myStream.getVideoTracks()[0]
         const videoSender = myPeerConnection.getSenders().find((sender) => sender.track.kind === 'video')
-        videoSender.replaceTrack(videoTrack)
-    }
-})
-// 녹음 시작 버튼
-recordBtn.addEventListener('click', () => {
-    if (!isRecording) {
-        startAudioRecording()
-        recordBtn.innerText = 'Stop Recording'
-        isRecording = true
-    } else {
-        stopAudioRecording()
-        recordBtn.innerText = 'Start Recording'
-        isRecording = false
+        if (videoSender) {
+            videoSender.replaceTrack(videoTrack)
+        }
     }
 })
 
-// Welcome Form (Choose a room)
+// 방 입장
 const welcome = document.getElementById('welcome')
-welcomeForm = welcome.querySelector('form')
+const welcomeForm = welcome.querySelector('form')
 
 async function initCall() {
     welcome.hidden = true
     call.hidden = false
     await getMedia()
     makeConnection()
+
+    // 첫 참가자도 녹음 시작
+    if (!isRecording) {
+        await startAudioRecording()
+        isRecording = true
+    }
 }
 
 welcomeForm.addEventListener('submit', async (event) => {
@@ -233,76 +170,80 @@ welcomeForm.addEventListener('submit', async (event) => {
     input.value = ''
 })
 
+// 방 나가기
 const exitBtn = document.getElementById('exitBtn')
-
-exitBtn.addEventListener('click', () => {
+exitBtn.addEventListener('click', async () => {
     if (myPeerConnection) {
         myPeerConnection.close()
         myPeerConnection = null
     }
 
-    // 미디어 스트림 정리
     if (myStream) {
         myStream.getTracks().forEach((track) => track.stop())
         myStream = null
     }
 
-    // UI 초기화
+    if (isRecording) {
+        await stopAudioRecording()
+        isRecording = false
+    }
+
     call.hidden = true
     welcome.hidden = false
 
-    // 서버에 방 퇴장 알리기 (선택)
     socket.emit('leave_room', roomName)
     roomName = null
 
     console.log('🚪 방을 나갔습니다.')
 })
 
-// Socket Code
-
-// in Brave
+// ✅ Socket Events
 socket.on('welcome', async () => {
     const offer = await myPeerConnection.createOffer()
     myPeerConnection.setLocalDescription(offer)
-    console.log('sent the offer')
     socket.emit('offer', offer, roomName)
+    console.log('📤 sent the offer')
+
+    if (!isRecording) {
+        await startAudioRecording()
+        isRecording = true
+    }
 })
 
-// in FireFox
 socket.on('offer', async (offer) => {
-    console.log('received the offer')
+    console.log('📩 received the offer')
     myPeerConnection.setRemoteDescription(offer)
     const answer = await myPeerConnection.createAnswer()
     myPeerConnection.setLocalDescription(answer)
     socket.emit('answer', answer, roomName)
-    console.log('sent the answer')
+    console.log('📤 sent the answer')
 })
 
-// back in Brave
 socket.on('answer', (answer) => {
     myPeerConnection.setRemoteDescription(answer)
-    console.log('received the answer')
+    console.log('📩 received the answer')
 })
 
 socket.on('ice', (ice) => {
     myPeerConnection.addIceCandidate(ice)
-    console.log('received candidate')
+    console.log('📩 received ICE candidate')
 })
 
-// RTC code
+// ✅ peer가 떠날 때 자동 녹음 종료
+socket.on('peer_left', async () => {
+    console.log('👋 peer left')
+
+    if (isRecording) {
+        await stopAudioRecording()
+        isRecording = false
+    }
+})
+
+// RTC 연결
 function makeConnection() {
     myPeerConnection = new RTCPeerConnection({
         iceServers: [
-            {
-                urls: [
-                    'stun:stun.l.google.com:19302',
-                    'stun:stun1.l.google.com:19302',
-                    'stun:stun2.l.google.com:19302',
-                    'stun:stun3.l.google.com:19302',
-                    'stun:stun4.l.google.com:19302',
-                    // We need to implement our own STUN server as we make our web app
-                ],
-            },
+            { urls: ['stun:stun.l.google.com:19302'] },
         ],
     })
     myPeerConnection.addEventListener('icecandidate', handleIce)
@@ -314,7 +255,7 @@ function makeConnection() {
 
 function handleIce(data) {
     socket.emit('ice', data.candidate, roomName)
-    console.log('sent candidate')
+    console.log('📤 sent ICE candidate')
 }
 
 function handleAddStream(data) {
