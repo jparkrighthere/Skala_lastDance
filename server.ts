@@ -61,6 +61,11 @@ io.on('connection', (socket) => {
     socket.on('ice', (ice, roomName) => {
         socket.to(roomName).emit('ice', ice)
     })
+    socket.on('leave_room', (roomName) => {
+        socket.leave(roomName)
+        socket.to(roomName).emit('peer_left')
+    })
+
 })
 
 server.listen(3000, () => {
