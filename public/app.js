@@ -13,12 +13,17 @@ let muted = false
 let cameraOff = false
 let roomName
 let myPeerConnection
+let remoteStream = null
 
 // 녹음 관련
 let mediaRecorder
 let recordedChunks = []
 let isRecording = false
-let audioStream
+let audioContext
+let destination
+
+// 중복 업로드 방지 플래그
+let hasUploaded = false
 
 async function getCameras() {
     try {
@@ -59,13 +64,28 @@ async function getMedia(deviceId) {
     }
 }
 
-// 자동 음성 녹음 시작
+// ✅ 상대방이 들어왔을 때만 오디오 믹싱 및 녹음 시작
 async function startAudioRecording() {
-    try {
-        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    if (!myStream || !remoteStream) {
+        console.warn('🎧 스트림이 준비되지 않았습니다.')
+        return
+    }
 
-        recordedChunks = []
-        mediaRecorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' })
+    // 중복 업로드 방지 플래그 초기화
+    hasUploaded = false
+    recordedChunks = []
+
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)()
+        destination = audioContext.createMediaStreamDestination()
+
+        const localAudioSource = audioContext.createMediaStreamSource(myStream)
+        const remoteAudioSource = audioContext.createMediaStreamSource(remoteStream)
+
+        localAudioSource.connect(destination)
+        remoteAudioSource.connect(destination)
+
+        mediaRecorder = new MediaRecorder(destination.stream, { mimeType: 'audio/webm' })
 
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
@@ -75,6 +95,12 @@ async function startAudioRecording() {
 
         mediaRecorder.onstop = async () => {
             console.log('🛑 음성 녹음 종료')
+
+            if (hasUploaded) {
+                // 이미 업로드 완료되었으면 리턴
+                return
+            }
+            hasUploaded = true
 
             const blob = new Blob(recordedChunks, { type: 'audio/webm' })
             const formData = new FormData()
@@ -90,30 +116,36 @@ async function startAudioRecording() {
                 if (!response.ok) throw new Error('업로드 실패')
 
                 const result = await response.json()
-                console.log('✅ FastAPI 업로드  성공', result)
+                console.log('✅ FastAPI 업로드 성공', result)
             } catch (error) {
-                console.error('❌ FastAPI 업로드 오류:', error)
+                console.error('❌ 업로드 실패:', error)
                 alert('FastAPI 서버로 파일 전송에 실패했습니다.')
             }
         }
 
         mediaRecorder.start()
-        console.log('🎙️ 음성 녹음 시작')
+        console.log('🎙️ 양방향 음성 녹음 시작')
     } catch (e) {
-        console.error('❌ 마이크 접근 실패:', e)
-        alert('마이크 사용 권한을 허용해주세요!')
+        console.error('❌ 오디오 믹싱 녹음 실패:', e)
     }
 }
 
-// 자동 녹음 종료
-async function stopAudioRecording() {
+async function stopAudioRecording(upload = true) {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop()
     }
 
-    if (audioStream) {
-        audioStream.getTracks().forEach((track) => track.stop())
-        audioStream = null
+    if (audioContext) {
+        await audioContext.close()
+        audioContext = null
+    }
+
+    destination = null
+
+    // upload는 stop 호출 시 업로드 여부 결정 플래그, 
+    // 실제 업로드는 mediaRecorder.onstop 내부에서 hasUploaded 체크해서 진행
+    if (upload && !hasUploaded) {
+        hasUploaded = true
     }
 }
 
@@ -153,12 +185,6 @@ async function initCall() {
     call.hidden = false
     await getMedia()
     makeConnection()
-
-    // 첫 참가자도 녹음 시작
-    if (!isRecording) {
-        await startAudioRecording()
-        isRecording = true
-    }
 }
 
 welcomeForm.addEventListener('submit', async (event) => {
@@ -184,7 +210,7 @@ exitBtn.addEventListener('click', async () => {
     }
 
     if (isRecording) {
-        await stopAudioRecording()
+        await stopAudioRecording(true)  // 업로드 수행
         isRecording = false
     }
 
@@ -203,11 +229,6 @@ socket.on('welcome', async () => {
     myPeerConnection.setLocalDescription(offer)
     socket.emit('offer', offer, roomName)
     console.log('📤 sent the offer')
-
-    if (!isRecording) {
-        await startAudioRecording()
-        isRecording = true
-    }
 })
 
 socket.on('offer', async (offer) => {
@@ -229,17 +250,17 @@ socket.on('ice', (ice) => {
     console.log('📩 received ICE candidate')
 })
 
-// ✅ peer가 떠날 때 자동 녹음 종료
+// ✅ 누가 나가든 녹음 종료 & 업로드 중복 방지
 socket.on('peer_left', async () => {
     console.log('👋 peer left')
 
     if (isRecording) {
-        await stopAudioRecording()
+        await stopAudioRecording(false)  // 업로드 하지 않음 (나간 쪽이 업로드 담당)
         isRecording = false
     }
 })
 
-// RTC 연결
+// ✅ RTC 연결
 function makeConnection() {
     myPeerConnection = new RTCPeerConnection({
         iceServers: [
@@ -261,4 +282,11 @@ function handleIce(data) {
 function handleAddStream(data) {
     const peersFace = document.getElementById('peersFace')
     peersFace.srcObject = data.stream
+    remoteStream = data.stream
+
+    // 상대방이 들어왔으므로 녹음 시작
+    if (!isRecording) {
+        startAudioRecording()
+        isRecording = true
+    }
 }
