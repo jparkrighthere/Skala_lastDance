@@ -73,9 +73,12 @@ async function startAudioRecording() {
             }
         }
 
-        mediaRecorder.onstop = () => {
+        mediaRecorder.onstop = async () => {
+            console.log('🛑 음성 녹음 종료')
+
             const blob = new Blob(recordedChunks, { type: 'audio/webm' })
             const url = URL.createObjectURL(blob)
+
             const a = document.createElement('a')
             a.href = url
             a.download = `recording_${Date.now()}.webm`
@@ -84,6 +87,27 @@ async function startAudioRecording() {
             a.click()
             document.body.removeChild(a)
             URL.revokeObjectURL(url)
+
+            // Send FastAPI
+            const formData = new FormData()
+            const filename = `recording_${Date.now()}.webm`
+            formData.append('file', blob, filename)
+
+            try {
+                const response = await fetch('http://localhost:8000/upload-audio', {
+                    method: 'POST',
+                    body: formData,
+                })
+
+                if (!response.ok) {
+                    throw new Error('업로드 실패')
+                }
+                const result = await response.json()
+                console.log('FastAPI 업로드 성공', result)
+            } catch (error) {
+                console.error('❌ FastAPI 업로드 오류:', error)
+                alert('FastAPI 서버로 파일 전송에 실패했습니다.')
+            }
         }
 
         mediaRecorder.start()
@@ -95,9 +119,9 @@ async function startAudioRecording() {
 }
 
 // 녹음 종료 함수
-function stopAudioRecording() {
+async function stopAudioRecording() {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.onstop = () => {
+        mediaRecorder.onstop = async () => {
             console.log('🛑 음성 녹음 종료')
 
             const blob = new Blob(recordedChunks, { type: 'audio/webm' })
@@ -111,6 +135,27 @@ function stopAudioRecording() {
             a.click()
             document.body.removeChild(a)
             URL.revokeObjectURL(url) // 메모리 정리
+
+            // Send FastAPI
+            const formData = new FormData()
+            const filename = `recording_${Date.now()}.webm`
+            formData.append('file', blob, filename)
+
+            try {
+                const response = await fetch('http://localhost:8000/upload-audio', {
+                    method: 'POST',
+                    body: formData,
+                })
+
+                if (!response.ok) {
+                    throw new Error('업로드 실패')
+                }
+                const result = await response.json()
+                console.log('FastAPI 업로드 성공', result)
+            } catch (error) {
+                console.error('❌ FastAPI 업로드 오류:', error)
+                alert('FastAPI 서버로 파일 전송에 실패했습니다.')
+            }
         }
 
         mediaRecorder.stop() // onstop은 여기 이후에 실행됨
