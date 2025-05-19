@@ -188,6 +188,31 @@ welcomeForm.addEventListener('submit', async (event) => {
     input.value = ''
 })
 
+const exitBtn = document.getElementById('exitBtn')
+
+exitBtn.addEventListener('click', () => {
+    if (myPeerConnection) {
+        myPeerConnection.close()
+        myPeerConnection = null
+    }
+
+    // 미디어 스트림 정리
+    if (myStream) {
+        myStream.getTracks().forEach((track) => track.stop())
+        myStream = null
+    }
+
+    // UI 초기화
+    call.hidden = true
+    welcome.hidden = false
+
+    // 서버에 방 퇴장 알리기 (선택)
+    socket.emit('leave_room', roomName)
+    roomName = null
+
+    console.log('🚪 방을 나갔습니다.')
+})
+
 // Socket Code
 
 // in Brave

@@ -56,6 +56,12 @@ io.on('connection', (socket) => {
     socket.on('ice', (ice, roomName) => {
         socket.to(roomName).emit('ice', ice)
     })
+    
+    socket.on('leave_room', (roomName) => {
+        socket.leave(roomName)
+        socket.to(roomName).emit('peer_left') // 옵션: 남은 참가자에게 알림
+        console.log(`A user left room: ${roomName}`)
+    })
 })
 
 server.listen(3000, () => {
