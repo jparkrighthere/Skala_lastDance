@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config'
 const socket = io()
 
 const myFace = document.getElementById('myFace')
@@ -82,7 +83,7 @@ async function startAudioRecording() {
             formData.append('file', blob, filename)
 
             try {
-                const response = await fetch('https://0681-211-45-60-5.ngrok-free.app/consult/upload', {
+                const response = await fetch(`${API_BASE_URL}/consult/upload`, {
                     method: 'POST',
                     body: formData,
                 })

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config'
 const chatForm = document.getElementById('chat-form')
 const chatInput = document.getElementById('chat-input')
 const chatHistory = document.getElementById('chat-history')
@@ -19,7 +20,7 @@ chatForm.addEventListener('submit', async (e) => {
         const response = await callChatAPI(question)
 
         // 로딩 메시지 → 실제 응답으로 교체
-        loadingBubble.textContent = response.answer
+        loadingBubble.textContent = response
     } catch (err) {
         loadingBubble.textContent = '❌ 챗봇 응답 오류'
     }
@@ -58,17 +59,25 @@ function appendMessage(sender, text, type = 'user') {
 // ✅ 실제 FastAPI 챗 API와 연결하는 함수
 async function callChatAPI(question) {
     try {
-        const response = await fetch(`http://localhost:8000/chat?q=${encodeURIComponent(question)}`, {
+        const response = await fetch(`${API_BASE_URL}/chat/?q=${encodeURIComponent(question)}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true',
             },
         })
 
-        const result = await response.json()
-        return result
+        const text = await response.text()
+        console.log('🔍 응답 원문:', text)
+
+        if (!response.ok) {
+            throw new Error(`서버 오류 상태: ${response.status}`)
+        }
+
+        const result = JSON.parse(text) // 이 시점에서는 JSON이 확실한 경우만 파싱
+        return result.answer
     } catch (err) {
         console.error('❌ GPT 서버 요청 실패:', err)
-        return { answer: '서버 응답 실패' }
+        return '서버 응답 실패'
     }
 }
