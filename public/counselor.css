@@ -1,0 +1,208 @@
+/* === 기본 구조 === */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Helvetica Neue', sans-serif;
+    background-color: #fdfdfd;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+}
+
+header {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+h1 {
+    font-size: 2rem;
+    color: #444;
+    letter-spacing: 0.5px;
+}
+
+main {
+    width: 100%;
+    max-width: 960px;
+}
+
+#welcome form {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+input[type='text'] {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    width: 200px;
+}
+
+button {
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+    border: none;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+}
+
+button:hover {
+    background-color: #005fcc;
+}
+
+#call {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+#myStream {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+video {
+    width: 100%;
+    height: auto;
+    max-height: 500px;
+    aspect-ratio: 16/9;
+    background-color: #eee;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    object-fit: cover;
+}
+
+.controls {
+    grid-column: span 2;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+select {
+    padding: 0.45rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 0.95rem;
+}
+
+/* === 챗봇 UI === */
+
+#chatbot-box {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 320px;
+    max-height: 400px;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    z-index: 9999;
+}
+
+#chatbot-box h3 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+}
+
+.chat-history {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 200px;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    padding-right: 4px;
+}
+
+.chat-bubble {
+    max-width: 70%;
+    padding: 0.6rem 0.9rem;
+    border-radius: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    word-break: break-word;
+    white-space: pre-wrap;
+    text-align: left;
+    position: relative;
+}
+
+/* 상담사 → 오른쪽 */
+.chat-bubble.user {
+    align-self: flex-end;
+    background-color: #007bff;
+    color: white;
+    border-bottom-right-radius: 0.2rem;
+    border-bottom-left-radius: 1rem;
+    margin-left: auto;
+}
+
+/* 챗봇 → 왼쪽 */
+.chat-bubble.bot {
+    align-self: flex-start;
+    background-color: #f0f0f0;
+    color: #333;
+    border-bottom-left-radius: 0.2rem;
+    border-bottom-right-radius: 1rem;
+    margin-right: auto;
+}
+
+.chat-sender {
+    font-size: 0.75rem;
+    margin-bottom: 0.2rem;
+    opacity: 0.7;
+    width: 100%;
+}
+
+#chat-form input {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 0.9rem;
+}
+
+/* === 반응형 === */
+
+@media (max-width: 768px) {
+    #myStream {
+        grid-template-columns: 1fr;
+    }
+
+    .controls {
+        grid-column: span 1;
+    }
+
+    #chatbot-box {
+        width: 90%;
+        right: 5%;
+    }
+}

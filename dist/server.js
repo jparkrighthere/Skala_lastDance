@@ -37,6 +37,10 @@ app.use(express_1.default.static(path_1.default.join(__dirname, '..', 'public'))
 app.get('/', (req, res) => {
     res.sendFile(path_1.default.join(__dirname, '..', 'index.html'));
 });
+// 상담사 전용 페이지
+app.get('/counselor', (req, res) => {
+    res.sendFile(path_1.default.join(__dirname, '..', 'public/counselor.html'));
+});
 io.on('connection', (socket) => {
     socket.on('join_room', (roomName) => {
         socket.join(roomName);
