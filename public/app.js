@@ -263,9 +263,7 @@ socket.on('peer_left', async () => {
 // ✅ RTC 연결
 function makeConnection() {
     myPeerConnection = new RTCPeerConnection({
-        iceServers: [
-            { urls: ['stun:stun.l.google.com:19302'] },
-        ],
+        iceServers: [{ urls: ['stun:stun.l.google.com:19302'] }],
     })
     myPeerConnection.addEventListener('icecandidate', handleIce)
     myPeerConnection.addEventListener('addstream', handleAddStream)
