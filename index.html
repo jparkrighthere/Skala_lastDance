@@ -1,33 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Noom</title>
-    </head>
-    <body>
-        <header>
-            <h1>Skala_LastDance</h1>
-        </header>
-        <main>
-            <div id="welcome">
-                <form>
-                    <input id="roomName" name="roomName" placeholder="Room Name" required type="text" />
-                    <button type="submit">Enter Room</button>
-                </form>
-            </div>
-            <div id="call">
-                <div id="myStream">
-                    <video id="myFace" autoplay playsinline width="400" height="400"></video>
-                    <button id="mute">Mute</button>
-                    <button id="camera">Turn Camera Off</button>
-                    <select id="cameras"></select>
-                    <button id="recordBtn">Start Recording</button>
-                    <video id="peersFace" autoplay playsinline width="400" height="400"></video>
-                </div>
-            </div>
-        </main>
-        <script src="/socket.io/socket.io.js"></script>
-        <script src="/app.js"></script>
-    </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Noom</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', sans-serif;
+      background-color: #fdfdfd;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #444;
+      letter-spacing: 0.5px;
+    }
+
+    main {
+      width: 100%;
+      max-width: 960px;
+    }
+
+    #welcome form {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    input[type="text"] {
+      padding: 0.5rem 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+      width: 200px;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 4px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.25s ease;
+    }
+
+    button:hover {
+      background-color: #005fcc;
+    }
+
+    #call {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    #myStream {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+
+    video {
+      width: 100%;
+      height: auto;
+      max-height: 500px;
+      aspect-ratio: 16/9;
+      background-color: #eee;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      object-fit: cover;
+    }
+
+    .controls {
+      grid-column: span 2;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    select {
+      padding: 0.45rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 768px) {
+      #myStream {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Skala_LastDance</h1>
+  </header>
+  <main>
+    <div id="welcome">
+      <form>
+        <input id="roomName" name="roomName" placeholder="Room Name" required type="text" />
+        <button type="submit">Enter Room</button>
+      </form>
+    </div>
+    <div id="call">
+      <div id="myStream">
+        <video id="myFace" autoplay playsinline></video>
+        <video id="peersFace" autoplay playsinline></video>
+        <div class="controls">
+          <button id="mute">Mute</button>
+          <button id="camera">Turn Camera Off</button>
+          <select id="cameras"></select>
+          <button id="recordBtn">Start Recording</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/app.js"></script>
+</body>
 </html>
