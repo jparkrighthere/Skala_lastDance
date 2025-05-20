@@ -68,7 +68,7 @@ function typewriterEffect(element, text, speed = 30) {
 // ✅ 실제 FastAPI 챗 API와 연결하는 함수
 async function callChatAPI(question) {
     try {
-        const response = await fetch(`https://5102-211-45-60-5.ngrok-free.app/chat/?q=${encodeURIComponent(question)}`, {
+        const response = await fetch(`https://aa24-211-45-60-5.ngrok-free.app/chat/?q=${encodeURIComponent(question)}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
