@@ -5,10 +5,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Skala Counselor</title>
         <link rel="stylesheet" href="./counselor.css" />
+        <link rel="stylesheet" href="/style.css" />
     </head>
     <body>
         <header>
-            <h1>Skala Counselor Panel</h1>
+            <img src="/sk-logo.png" alt="SK Logo" id="sk-logo" />
+            <h1>Skala Counselor</h1>
         </header>
         <main>
             <div id="welcome">
@@ -32,8 +34,11 @@
         </main>
 
         <!-- 챗봇 UI -->
-        <div id="chatbot-box">
-            <h3>💬 챗봇 도우미</h3>
+        <div id="chatbot-box" class="minimized">
+            <h3>
+                💬 챗봇 도우미
+                <span id="chat-close-btn" style="float: right; cursor: pointer">✖</span>
+            </h3>
             <div id="chat-history" class="chat-history"></div>
             <form id="chat-form">
                 <input id="chat-input" type="text" placeholder="질문을 입력하세요..." autocomplete="off" />
