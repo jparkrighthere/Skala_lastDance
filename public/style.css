@@ -1,0 +1,140 @@
+:root {
+    --sk-red: #ea002c;
+    --sk-orange: #f47725;
+    --bg-light: #f9f9f9;
+    --text-dark: #222;
+    --border-gray: #ddd;
+    --font-main: 'Helvetica Neue', sans-serif;
+}
+#sk-logo {
+    height: 60px; /* 너무 크지 않게 제한 */
+    max-width: 180px;
+    object-fit: contain;
+    margin-bottom: 0.5rem;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* 기본 설정 */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+}
+
+/* 헤더 */
+header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 1.8rem;
+    color: var(--sk-red);
+    margin-top: 0.5rem;
+}
+
+/* 메인 레이아웃 */
+main {
+    width: 100%;
+    max-width: 960px;
+}
+
+/* 폼 스타일 */
+form {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+input[type='text'] {
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--border-gray);
+    border-radius: 6px;
+    font-size: 1rem;
+    width: 220px;
+}
+
+button {
+    padding: 0.6rem 1rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 6px;
+    background-color: var(--sk-red);
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: var(--sk-orange);
+}
+
+/* 영상 UI */
+#call {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+#myStream {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    width: 100%;
+    align-items: center;
+}
+
+video {
+    width: 100%;
+    height: auto;
+    max-height: 500px;
+    aspect-ratio: 16/9;
+    background-color: #eee;
+    border-radius: 8px;
+    border: 1px solid var(--border-gray);
+    object-fit: cover;
+}
+
+/* 컨트롤 버튼 */
+.controls {
+    grid-column: span 2;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+select {
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-gray);
+    font-size: 0.95rem;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    #myStream {
+        grid-template-columns: 1fr;
+    }
+
+    .controls {
+        grid-column: span 1;
+    }
+}

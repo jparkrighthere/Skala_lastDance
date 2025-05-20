@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../config'
+// import { API_BASE_URL } from '../config'
 const socket = io()
 
 const myFace = document.getElementById('myFace')
@@ -109,7 +109,7 @@ async function startAudioRecording() {
             formData.append('file', blob, filename)
 
             try {
-                const response = await fetch(`${API_BASE_URL}/consult/upload`, {
+                const response = await fetch(`https://5102-211-45-60-5.ngrok-free.app/consult/upload`, {
                     method: 'POST',
                     body: formData,
                 })
@@ -143,7 +143,7 @@ async function stopAudioRecording(upload = true) {
 
     destination = null
 
-    // upload는 stop 호출 시 업로드 여부 결정 플래그, 
+    // upload는 stop 호출 시 업로드 여부 결정 플래그,
     // 실제 업로드는 mediaRecorder.onstop 내부에서 hasUploaded 체크해서 진행
     if (upload && !hasUploaded) {
         hasUploaded = true
@@ -211,7 +211,7 @@ exitBtn.addEventListener('click', async () => {
     }
 
     if (isRecording) {
-        await stopAudioRecording(true)  // 업로드 수행
+        await stopAudioRecording(true) // 업로드 수행
         isRecording = false
     }
 
@@ -256,7 +256,7 @@ socket.on('peer_left', async () => {
     console.log('👋 peer left')
 
     if (isRecording) {
-        await stopAudioRecording(false)  // 업로드 하지 않음 (나간 쪽이 업로드 담당)
+        await stopAudioRecording(false) // 업로드 하지 않음 (나간 쪽이 업로드 담당)
         isRecording = false
     }
 })
