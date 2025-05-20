@@ -107,21 +107,41 @@ async function startAudioRecording() {
             const formData = new FormData()
             const filename = `recording_${Date.now()}.webm`
             formData.append('file', blob, filename)
+            
 
             try {
-                const response = await fetch(`https://5102-211-45-60-5.ngrok-free.app/consult/upload`, {
+                // 파일 업로드
+                const uploadResponse = await fetch(`https://aa24-211-45-60-5.ngrok-free.app/consult/upload`, {
                     method: 'POST',
                     body: formData,
-                })
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true'
+                    },
+                });
+        
+                if (!uploadResponse.ok) throw new Error('업로드 실패');
+        
+                const result = await uploadResponse.json();
+                console.log('✅ FastAPI 업로드 성공', result);
 
-                if (!response.ok) throw new Error('업로드 실패')
-
-                const result = await response.json()
-                console.log('✅ FastAPI 업로드 성공', result)
+        
+                const reportResponse = await fetch(`https://aa24-211-45-60-5.ngrok-free.app/consult/generate-reports`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true'
+                    },
+                });
+        
+                if (!reportResponse.ok) throw new Error('보고서 생성 요청 실패');
+        
+                const reportResult = await reportResponse.json();
+                console.log('📄 보고서 생성 요청 성공:', reportResult.message);
             } catch (error) {
-                console.error('❌ 업로드 실패:', error)
-                alert('FastAPI 서버로 파일 전송에 실패했습니다.')
+                console.error('❌ 처리 실패:', error);
+                alert('파일 업로드 또는 보고서 생성에 실패했습니다.');
             }
+
         }
 
         mediaRecorder.start()
